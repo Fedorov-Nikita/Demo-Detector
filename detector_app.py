@@ -170,7 +170,7 @@ def load_image():
 		return img_numpy
 
 def main():
-	st.title("Time to detect what you want")
+	st.title("It's time to detect what's in your photo")
 	img = load_image()
 	if img is not None:
 		threshold = st.sidebar.slider("Set the threshold for the detector", 0., 1.)
