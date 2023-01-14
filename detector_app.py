@@ -32,21 +32,32 @@ def load_model():
 	model = model.eval()
 	return model
 	
-def plot_predictions(numpy_img, preds, tresh=0.5):
+def plot_predictions(numpy_img, preds, tresh):
 	boxes = preds['boxes'][preds['scores'] > tresh].detach().numpy()
 	labels = preds['labels'][preds['scores'] > tresh].detach().numpy()
+	scores = preds['scores'][preds['scores'] > tresh].detach().numpy()
+	# st.write(, )
+	# img_h = numpy_img.shape[0]
+	# img_w numpy_img.shape[1]
 	for i, box in enumerate(boxes):
-		numpy_img = cv2.rectangle(numpy_img.astype('float32'), (int(box[0]),int(box[1])), (int(box[2]),int(box[3])), (255, 0, 0), 3)
+		np.random.seed(labels[i]-1)
+		color_ = (np.random.randint(0, 255),np.random.randint(0, 255),np.random.randint(0, 255))
+		label = f'{coco_labels[labels[i]-1].capitalize()}: {round(scores[i]*100, 2)}%'
+		(w, h), _ = cv2.getTextSize(
+			label, cv2.FONT_HERSHEY_SIMPLEX, 2, 3)
+		numpy_img = cv2.rectangle(numpy_img, (int(box[0]), int(box[1])), (int(box[2]),int(box[3])), color=color_, thickness=3)
 		# coco_labels[labels[i]]
+		numpy_img = cv2.rectangle(numpy_img, (int(box[0]), int(box[1] - h*1.2)), (int(box[0] + w), int(box[1])), color_, -1)
+		st.write(int(box[0]), int(box[1] - h*1.2),'---', int(box[0] + w), int(box[1]))
 		numpy_img = cv2.putText(numpy_img, 
-			coco_labels[labels[i]-1], 
+			label, 
 			(
 				int(box[0]),
 				int(box[1])-5
 			), 
 			cv2.FONT_HERSHEY_SIMPLEX,
 			fontScale = 2,
-			color = 255,
+			color = (255,255,255),
 			thickness = 3
 		)
 	numpy_img = numpy_img.astype('uint')
@@ -62,7 +73,6 @@ def load_image():
 	uploaded_file = st.sidebar.file_uploader(label='Upload a photo')
 	if uploaded_file is not None:
 		image_data = uploaded_file.getvalue()
-		st.image(image_data)
 		img_numpy = np.array(Image.open(io.BytesIO(image_data)))
 		return img_numpy
 
@@ -71,12 +81,13 @@ def main():
 	img = load_image()
 	if img is not None:
 		threshold = st.sidebar.slider("Set the threshold for the detector", 0., 1.)
+		if threshold == .0:
+			threshold = 0.75
 		model = load_model()
 		clicked = st.sidebar.button('Detect objects')
 		if clicked:
-			detect_my_image(img, model, threshold)
-			st.success('Done')
-			st.snow()
+			with st.spinner('Please wait for us to carry out a detection...'):
+				detect_my_image(img, model, threshold)
 	
 if __name__ == '__main__':
 	main()
