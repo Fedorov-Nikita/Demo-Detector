@@ -1,5 +1,8 @@
 import io
 from PIL import Image
+import base64
+import uuid
+import re
 
 import streamlit as st
 import cv2
@@ -45,11 +48,11 @@ def plot_predictions(numpy_img, preds, tresh):
 		(w, h), _ = cv2.getTextSize(
 			label, cv2.FONT_HERSHEY_SIMPLEX, 2, 3)
 		numpy_img = cv2.rectangle(numpy_img, (int(box[0]), int(box[1])), (int(box[2]),int(box[3])), color=color_, thickness=3)
-		# coco_labels[labels[i]]
 		x_lu = int(box[0])
 		x_rd = int(box[0] + w)
 		y_lu = int(box[1] - h*1.2)
 		y_rd = int(box[1])
+		# Correct the coordinates going beyond the edge of the image
 		d_x = 0
 		d_y = 0
 		if (x_lu < 0):
@@ -64,8 +67,8 @@ def plot_predictions(numpy_img, preds, tresh):
 		x_rd = x_rd + d_x
 		y_lu = y_lu + d_y
 		y_rd = y_rd + d_y
+		# Draw labels
 		numpy_img = cv2.rectangle(numpy_img, (x_lu, y_lu), (x_rd, y_rd), color_, -1)
-		# st.write(int(box[0]), int(box[1] - h*1.2),'---', int(box[0] + w), int(box[1]))
 		numpy_img = cv2.putText(numpy_img, 
 			label, 
 			(
@@ -77,8 +80,81 @@ def plot_predictions(numpy_img, preds, tresh):
 			color = (255,255,255),
 			thickness = 3
 		)
+	result = Image.fromarray(numpy_img)
 	numpy_img = numpy_img.astype('uint')
 	st.image(numpy_img)
+	if numpy_img.shape[2] > 3:
+		isPNG = True
+		output_extension = ".png"
+	else:
+		isPNG = False
+		output_extension = ".jpg"
+	st.sidebar.markdown(download_button(result, f"detected_photo{output_extension}", "Download detected photo", isPNG), unsafe_allow_html=True)
+
+def download_button(object_to_download, download_filename, button_text, isPNG):
+	"""
+	Generates a link to download the given object_to_download.
+
+	Params:
+	------
+	object_to_download:  The object to be downloaded.
+	download_filename (str): filename and extension of file. e.g. mydata.csv,
+	some_txt_output.txt download_link_text (str): Text to display for download
+	link.
+	button_text (str): Text to display on download button (e.g. 'click here to download file')
+	pickle_it (bool): If True, pickle file.
+
+	Returns:
+	-------
+	(str): the anchor tag to download object_to_download
+
+	Examples:
+	--------
+	download_link(Pillow_image_from_cv_matrix, 'your_image.jpg', 'Click to me to download!')
+	"""
+
+	buffered = io.BytesIO()
+	if isPNG:
+		object_to_download.save(buffered, format="PNG")
+	else:
+		object_to_download.save(buffered, format="JPEG")
+	b64 = base64.b64encode(buffered.getvalue()).decode()
+
+	button_uuid = str(uuid.uuid4()).replace('-', '')
+	button_id = re.sub('\d+', '', button_uuid)
+
+	custom_css = f""" 
+		<style>
+			#{button_id} {{
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				background-color: rgb(255, 255, 255);
+				color: rgb(38, 39, 48);
+				padding: .25rem .75rem;
+				position: relative;
+				text-decoration: none;
+				border-radius: 4px;
+				border-width: 1px;
+				border-style: solid;
+				border-color: rgb(230, 234, 241);
+				border-image: initial;
+			}} 
+
+			#{button_id}:hover {{
+				border-color: rgb(246, 51, 102);
+				color: rgb(246, 51, 102);
+			}}
+			#{button_id}:active {{
+				box-shadow: none;
+				background-color: rgb(246, 51, 102);
+				color: white;
+				}}
+		</style> """
+
+	dl_link = custom_css + f'<a download="{download_filename}" id="{button_id}" href="data:file/txt;base64,{b64}">{button_text}</a><br></br>'
+	return dl_link
+	
 
 def detect_my_image(img_numpy, model, tresh):
 	img = torch.from_numpy(img_numpy.astype('float32')).permute(2,0,1)
