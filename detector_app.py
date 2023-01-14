@@ -36,9 +36,8 @@ def plot_predictions(numpy_img, preds, tresh):
 	boxes = preds['boxes'][preds['scores'] > tresh].detach().numpy()
 	labels = preds['labels'][preds['scores'] > tresh].detach().numpy()
 	scores = preds['scores'][preds['scores'] > tresh].detach().numpy()
-	# st.write(, )
-	# img_h = numpy_img.shape[0]
-	# img_w numpy_img.shape[1]
+	img_y = numpy_img.shape[0]
+	img_x = numpy_img.shape[1]
 	for i, box in enumerate(boxes):
 		np.random.seed(labels[i]-1)
 		color_ = (np.random.randint(0, 255),np.random.randint(0, 255),np.random.randint(0, 255))
@@ -47,13 +46,31 @@ def plot_predictions(numpy_img, preds, tresh):
 			label, cv2.FONT_HERSHEY_SIMPLEX, 2, 3)
 		numpy_img = cv2.rectangle(numpy_img, (int(box[0]), int(box[1])), (int(box[2]),int(box[3])), color=color_, thickness=3)
 		# coco_labels[labels[i]]
-		numpy_img = cv2.rectangle(numpy_img, (int(box[0]), int(box[1] - h*1.2)), (int(box[0] + w), int(box[1])), color_, -1)
-		st.write(int(box[0]), int(box[1] - h*1.2),'---', int(box[0] + w), int(box[1]))
+		x_lu = int(box[0])
+		x_rd = int(box[0] + w)
+		y_lu = int(box[1] - h*1.2)
+		y_rd = int(box[1])
+		d_x = 0
+		d_y = 0
+		if (x_lu < 0):
+			d_x = 0 - x_lu
+		if (y_lu < 0):
+			d_y = 0 - y_lu
+		if (x_rd > img_x):
+			d_x = img_x - x_rd
+		if (y_rd > img_y):
+			d_y = img_y - y_rd
+		x_lu = x_lu + d_x
+		x_rd = x_rd + d_x
+		y_lu = y_lu + d_y
+		y_rd = y_rd + d_y
+		numpy_img = cv2.rectangle(numpy_img, (x_lu, y_lu), (x_rd, y_rd), color_, -1)
+		# st.write(int(box[0]), int(box[1] - h*1.2),'---', int(box[0] + w), int(box[1]))
 		numpy_img = cv2.putText(numpy_img, 
 			label, 
 			(
-				int(box[0]),
-				int(box[1])-5
+				x_lu,
+				y_rd-5
 			), 
 			cv2.FONT_HERSHEY_SIMPLEX,
 			fontScale = 2,
