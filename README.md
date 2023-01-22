@@ -36,4 +36,4 @@ Photo by <a href="https://unsplash.com/@dariobroe?utm_source=unsplash&utm_medium
 [badge-mit]: https://img.shields.io/badge/License-MIT-blue?style=for-the-badge&logo=appveyor.svg
 [badge-demo]: https://img.shields.io/badge/try%20demo-525252?style=for-the-badge&logo=Streamlit
 [license]: https://github.com/Fedorov-Nikita/Demo-Detector/blob/main/LICENSE
-[demo]: https://streamlit.io/
+[demo]: https://fedorov-photo-detector-fasterrcnn.streamlit.app/
