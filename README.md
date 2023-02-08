@@ -3,7 +3,7 @@
 </a>
 
 [![License][badge-mit]][license]
-![Project-status][status-active]
+![Project-status][status-completed]
 [![Try-demo][badge-demo]][demo]
 
 
